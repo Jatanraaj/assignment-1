@@ -1,18 +1,30 @@
-import React, { useState } from "react";
+import React, { useReducer, useState } from "react";
 import axios from "axios";
 import "./contact.css";
 
 const ContactUs = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  // const [name, setName] = useState("");
+  // const [email, setEmail] = useState("");
+  // const [message, setMessage] = useState("");
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  const [localstate,setLocalState]=useReducer((prevState,newState)=>({...prevState,...newState}),
+  {
+    name:"",
+    email:"",
+    message:"",
+    isSubmitted:false,
+    isSubmitting:false,
+    error:[],
+
+  })
+  const {name,email,message,isSubmitted,isSubmitting}=localstate;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    // setIsSubmitting(true);
+    setLocalState({isSubmitting:true})
     setError(null);
     try {
       await axios.post("http://localhost:3000/send-message", {
@@ -20,13 +32,20 @@ const ContactUs = () => {
         email,
         message,
       });
-      setIsSubmitted(true);
+      // setIsSubmitted(true);
+      setLocalState({isSubmitted:true})
+
     } catch (error) {
       setError("An error occurred while sending the message.");
     }
-    setIsSubmitting(false);
-  };
+    // setIsSubmitting(false);
+    setLocalState({isSubmitting:false})
 
+  };
+const handleChange=(e)=>{
+  const{name,value}=e.target;
+  setLocalState({[name]:value})
+}
   return (
     <div className={`container py-5 contactus ${isSubmitting && "blurred"}`}>
       <h1 className="text-center mb-5">
@@ -43,7 +62,8 @@ const ContactUs = () => {
                 placeholder="Name"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                name="name"
+                onChange={(e) => handleChange(e)}
               />
             </div>
             <div className="mb-3">
@@ -51,10 +71,11 @@ const ContactUs = () => {
                 type="email"
                 className="form-control"
                 id="email"
-                placeholder="Email"
+                placeholder="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                name="email"
+                onChange={(e) => handleChange(e)}
                 style={{marginTop:'30px'}}
               />
             </div>
@@ -66,7 +87,8 @@ const ContactUs = () => {
                 placeholder="Message"
                 required
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                name="message"
+                onChange={(e) => handleChange(e)}
                 style={{marginTop:'30px'}}
               ></textarea>
             </div>

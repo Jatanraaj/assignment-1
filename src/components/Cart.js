@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useReducer, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeFromCart, clearCart, increaseQuantity } from "../actions/cartActions";
 import Table from "react-bootstrap/Table";
@@ -7,16 +7,28 @@ import { RiDeleteBinLine } from "react-icons/ri";
 import Loader from "./Loader";
 import TextField from "@material-ui/core/TextField";
 import Grid from "@material-ui/core/Grid";
+import { event } from "jquery";
 
 const Cart = () => {
   const cartItems = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
-  const [recipientEmail, setRecipientEmail] = useState("");
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientProfession, setRecipientProfession] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-
+  // const [recipientEmail, setRecipientEmail] = useState("");
+  // const [recipientName, setRecipientName] = useState("");
+  // const [recipientProfession, setRecipientProfession] = useState("");
+  // const [loading, setLoading] = useState(false);
+  // const [orderPlaced, setOrderPlaced] = useState(false);
+  const [localState,setLocalState]=useReducer((prevState,newState)=>({...prevState,...newState}),{
+    recipientEmail:"",
+    recipientName:"",
+    recipientProfession:"",
+    loading:false,
+    orderPlaced:false,
+  });
+  const {recipientEmail,
+  recipientName,
+  recipientProfession,
+  loading,
+  orderPlaced}=localState;
   const handleRemove = (itemId) => {
     const index = cartItems.findIndex((item) => item.id === itemId);
 
@@ -31,7 +43,8 @@ const Cart = () => {
 
   const handleClear = () => {
     dispatch(clearCart());
-    setOrderPlaced(false);
+    // setOrderPlaced(false);
+    localState({orderPlaced:false})
   };
 
   const total = cartItems.reduce((acc, item) => acc + item.price * item.count, 0);
@@ -52,7 +65,8 @@ const Cart = () => {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
+    setLocalState({loading:true})
 
     fetch("http://localhost:3000/send-email", {
       method: "POST",
@@ -64,16 +78,22 @@ const Cart = () => {
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        setLoading(false);
-        setOrderPlaced(true);
+        // setLoading(false);
+        // setOrderPlaced(true);
+        setLocalState({loading:false})
+        setLocalState({orderPlaced:true})
         dispatch(clearCart());
       })
       .catch((error) => {
         console.error(error);
-        setLoading(false);
+        // setLoading(false);
+        setLocalState({loading:false})
       });
   };
-
+ const handleChange=(event)=>{
+  const{name,value}=event.target;
+  setLocalState({[name]:value});
+ }
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -172,30 +192,30 @@ const Cart = () => {
                   <TextField
                     type="email"
                     label="Email"
-
+                    name="recipientEmail"
                     fullWidth
                     value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    onChange={(e) => handleChange(e)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <TextField
                     type="text"
                     label="Name"
-
+                    name="recipientName"
                     fullWidth
                     value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
+                    onChange={(e) => handleChange(e)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <TextField
                     type="textarea"
                     label="Address"
-
+                    name="recipientProfession"
                     fullWidth
                     value={recipientProfession}
-                    onChange={(e) => setRecipientProfession(e.target.value)}
+                    onChange={(e) => handleChange(e)}
                   />
                 </Grid>
                 <Grid item xs={12}>
